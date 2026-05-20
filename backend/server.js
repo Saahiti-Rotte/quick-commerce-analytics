@@ -1,40 +1,21 @@
-const express = require('express');
-const cors = require('cors');
-const pool = require('./db');
+const express = require("express")
+const cors = require("cors")
 
-const productsRoute = require('./routes/products');
-const ordersRoute = require('./routes/orders');
-const analyticsRoute = require('./routes/analytics');
+const analyticsRoutes = require("./routes/analytics")
 
-const app = express();
+const app = express()
 
-app.use(cors());
-app.use(express.json());
+app.use(cors())
+app.use(express.json())
 
-// Routes
-app.use('/products', productsRoute);
-app.use('/orders', ordersRoute);
-app.use('/analytics', analyticsRoute);
+app.get("/", (req, res) => {
+  res.send("Backend is running")
+})
 
-// Root test route
-app.get('/', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT NOW()');
+app.use("/analytics", analyticsRoutes)
 
-    res.json({
-      message: 'Backend + PostgreSQL connected successfully',
-      currentTime: result.rows[0],
-    });
-  } catch (error) {
-    console.error(error);
+const PORT = 5000
 
-    res.status(500).json({
-      error: 'Database connection failed',
-    });
-  }
-});
-
-// Start server
-app.listen(5000, () => {
-  console.log('Server running on port 5000');
-});
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
