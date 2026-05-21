@@ -1,99 +1,198 @@
-const express = require('express');
+const express = require("express");
+
 const router = express.Router();
-const pool = require('../db');
 
-router.post('/', async (req, res) => {
+const {
+  PrismaClient,
+} = require("@prisma/client");
+
+const prisma = new PrismaClient();
+
+
+// -----------------------------------
+// GET ALL ORDERS
+// -----------------------------------
+
+router.get("/", async (req, res) => {
+
   try {
-    const { user_id, items } = req.body;
 
-    let total = 0;
+    const orders =
+      await prisma.order.findMany({
 
-    // Calculate total + validate stock
-    for (const item of items) {
-      const productResult = await pool.query(
-        'SELECT * FROM products WHERE id = $1',
-        [item.product_id]
-      );
+        include: {
 
-      const product = productResult.rows[0];
+          user: true,
 
-      if (!product) {
-        return res.status(404).json({
-          error: 'Product not found',
-        });
-      }
+          items: {
 
-      if (product.stock < item.quantity) {
-        return res.status(400).json({
-          error: `Not enough stock for ${product.name}`,
-        });
-      }
+            include: {
 
-      total += product.price * item.quantity;
-    }
+              product: true,
+            },
+          },
+        },
 
-    // Create order
-    const orderResult = await pool.query(
-      `INSERT INTO orders (user_id, total, status)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
-      [user_id, total, 'PLACED']
-    );
+        orderBy: {
 
-    const order = orderResult.rows[0];
+          createdAt: "desc",
+        },
+      });
 
-    // Create order items + deduct stock
-    for (const item of items) {
-      const productResult = await pool.query(
-        'SELECT * FROM products WHERE id = $1',
-        [item.product_id]
-      );
+    res.json(orders);
 
-      const product = productResult.rows[0];
-
-      await pool.query(
-        `INSERT INTO order_items
-         (order_id, product_id, quantity, item_price)
-         VALUES ($1, $2, $3, $4)`,
-        [
-          order.id,
-          item.product_id,
-          item.quantity,
-          product.price,
-        ]
-      );
-
-      await pool.query(
-        `UPDATE products
-         SET stock = stock - $1
-         WHERE id = $2`,
-        [item.quantity, item.product_id]
-      );
-    }
-
-    // Log event
-    await pool.query(
-      `INSERT INTO events (user_id, event_type, metadata)
-       VALUES ($1, $2, $3)`,
-      [
-        user_id,
-        'ORDER_PLACED',
-        JSON.stringify({
-          order_id: order.id,
-          total,
-        }),
-      ]
-    );
-
-    res.json({
-      message: 'Order placed successfully',
-      order,
-    });
   } catch (error) {
+
     console.error(error);
 
     res.status(500).json({
-      error: 'Failed to place order',
+
+      error:
+        "Internal Server Error",
+    });
+  }
+});
+
+
+// -----------------------------------
+// CREATE ORDER
+// -----------------------------------
+
+router.post("/", async (req, res) => {
+
+  try {
+
+    const {
+      userId,
+      productId,
+      quantity,
+    } = req.body;
+
+    // PRODUCT
+
+    const product =
+      await prisma.product.findUnique({
+
+        where: {
+          id: productId,
+        },
+
+        include: {
+          inventory: true,
+        },
+      });
+
+    if (!product) {
+
+      return res.status(404).json({
+
+        error:
+          "Product not found",
+      });
+    }
+
+    // STOCK CHECK
+
+    if (
+      product.inventory.stock <
+      quantity
+    ) {
+
+      return res.status(400).json({
+
+        error:
+          "Insufficient stock",
+      });
+    }
+
+    // TOTAL PRICE
+
+    const totalPrice =
+      product.price * quantity;
+
+    // CREATE ORDER
+
+    const order =
+      await prisma.order.create({
+
+        data: {
+
+          totalPrice,
+
+          status: "COMPLETED",
+
+          user: {
+
+            connect: {
+              id: userId,
+            },
+          },
+
+          items: {
+
+            create: [
+
+              {
+
+                quantity,
+
+                price:
+                  product.price,
+
+                product: {
+
+                  connect: {
+
+                    id: productId,
+                  },
+                },
+              },
+            ],
+          },
+        },
+
+        include: {
+
+          user: true,
+
+          items: {
+
+            include: {
+
+              product: true,
+            },
+          },
+        },
+      });
+
+    // UPDATE INVENTORY
+
+    await prisma.inventory.update({
+
+      where: {
+
+        productId:
+          productId,
+      },
+
+      data: {
+
+        stock:
+          product.inventory.stock -
+          quantity,
+      },
+    });
+
+    res.json(order);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+
+      error:
+        "Internal Server Error",
     });
   }
 });

@@ -4,51 +4,162 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("USER")
-  createdAt DateTime @default(now())
 
-  orders Order[]
+  id            String        @id @default(cuid())
+
+  name          String
+
+  email         String        @unique
+
+  password      String
+
+  role          String        @default("USER")
+
+  createdAt     DateTime      @default(now())
+
+  // RELATIONS
+
+  orders         Order[]
+
+  events         Event[]
+
+  experiments    Experiment[]
+
+  cart           Cart?
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  price       Float
-  image       String
-  stock       Int
-  category    String
-  createdAt   DateTime @default(now())
 
-  orderItems OrderItem[]
+  id            String        @id @default(cuid())
+
+  name          String
+
+  description   String
+
+  price         Float
+
+  image         String
+
+  category      String
+
+  createdAt     DateTime      @default(now())
+
+  // RELATIONS
+
+  inventory      Inventory?
+
+  orderItems     OrderItem[]
+
+  cartItems      CartItem[]
+}
+
+model Inventory {
+
+  id            String        @id @default(cuid())
+
+  stock         Int
+
+  updatedAt     DateTime      @updatedAt
+
+  productId     String        @unique
+
+  product       Product       @relation(fields: [productId], references: [id])
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  totalPrice Float
-  status     String      @default("PENDING")
-  createdAt  DateTime    @default(now())
 
-  userId String
-  user   User @relation(fields: [userId], references: [id])
+  id            String        @id @default(cuid())
 
-  items OrderItem[]
+  totalPrice    Float
+
+  status        String        @default("PENDING")
+
+  createdAt     DateTime      @default(now())
+
+  userId        String
+
+  user          User          @relation(fields: [userId], references: [id])
+
+  items         OrderItem[]
 }
 
 model OrderItem {
-  id        String @id @default(cuid())
-  quantity  Int
 
-  orderId String
-  order   Order @relation(fields: [orderId], references: [id])
+  id            String        @id @default(cuid())
 
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
+  quantity      Int
+
+  price         Float
+
+  orderId       String
+
+  order         Order         @relation(fields: [orderId], references: [id])
+
+  productId     String
+
+  product       Product       @relation(fields: [productId], references: [id])
+}
+
+model Event {
+
+  id            String        @id @default(cuid())
+
+  type          String
+
+  metadata      String?
+
+  createdAt     DateTime      @default(now())
+
+  userId        String
+
+  user          User          @relation(fields: [userId], references: [id])
+}
+
+model Experiment {
+
+  id            String        @id @default(cuid())
+
+  name          String
+
+  variant       String
+
+  converted     Boolean       @default(false)
+
+  createdAt     DateTime      @default(now())
+
+  userId        String
+
+  user          User          @relation(fields: [userId], references: [id])
+}
+
+model Cart {
+
+  id            String        @id @default(cuid())
+
+  createdAt     DateTime      @default(now())
+
+  userId        String        @unique
+
+  user          User          @relation(fields: [userId], references: [id])
+
+  items         CartItem[]
+}
+
+model CartItem {
+
+  id            String        @id @default(cuid())
+
+  quantity      Int
+
+  cartId        String
+
+  cart          Cart          @relation(fields: [cartId], references: [id])
+
+  productId     String
+
+  product       Product       @relation(fields: [productId], references: [id])
 }

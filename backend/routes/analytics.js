@@ -1,22 +1,137 @@
-const express = require("express")
+const express = require("express");
 
-const router = express.Router()
+const router = express.Router();
 
-router.get("/", (req, res) => {
-  res.json({
-    totalRevenue: 2980000,
-    totalOrders: 5001,
-    activeUsers: 12400,
+const {
+  PrismaClient,
+} = require("@prisma/client");
 
-    revenueTrend: [
-      { month: "Jan", revenue: 120000 },
-      { month: "Feb", revenue: 180000 },
-      { month: "Mar", revenue: 240000 },
-      { month: "Apr", revenue: 320000 },
-      { month: "May", revenue: 410000 },
-      { month: "Jun", revenue: 520000 },
-    ],
-  })
-})
+const prisma = new PrismaClient();
 
-module.exports = router
+
+// -----------------------------------
+// USERS
+// -----------------------------------
+
+router.get(
+  "/users",
+
+  async (req, res) => {
+
+    try {
+
+      const users =
+        await prisma.user.findMany({
+
+          select: {
+
+            id: true,
+            name: true,
+          },
+        });
+
+      res.json(users);
+
+    } catch (error) {
+
+      console.error(error);
+
+      res.status(500).json({
+
+        error:
+          "Internal Server Error",
+      });
+    }
+  }
+);
+
+
+// -----------------------------------
+// ANALYTICS
+// -----------------------------------
+
+router.get("/", async (req, res) => {
+
+  try {
+
+    const revenueAggregate =
+      await prisma.order.aggregate({
+
+        _sum: {
+          totalPrice: true,
+        },
+      });
+
+    const totalOrders =
+      await prisma.order.count();
+
+    const activeUsers =
+      await prisma.user.count();
+
+    const orders =
+      await prisma.order.findMany({
+
+        orderBy: {
+
+          createdAt: "asc",
+        },
+      });
+
+    const revenueMap = {};
+
+    orders.forEach((order) => {
+
+      const month =
+        new Date(order.createdAt)
+          .toLocaleString(
+            "default",
+            { month: "short" }
+          );
+
+      if (!revenueMap[month]) {
+
+        revenueMap[month] = 0;
+      }
+
+      revenueMap[month] +=
+        order.totalPrice;
+    });
+
+    const revenueTrend =
+      Object.entries(revenueMap)
+        .map(([month, revenue]) => ({
+
+          month,
+
+          revenue:
+            Number(
+              revenue.toFixed(2)
+            ),
+        }));
+
+    res.json({
+
+      totalRevenue:
+        revenueAggregate._sum
+          .totalPrice || 0,
+
+      totalOrders,
+
+      activeUsers,
+
+      revenueTrend,
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+
+      error:
+        "Internal Server Error",
+    });
+  }
+});
+
+module.exports = router;

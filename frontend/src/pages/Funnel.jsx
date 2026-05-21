@@ -1,7 +1,7 @@
 import Layout
   from "../components/Layout";
 
-export default function Orders() {
+export default function Funnel() {
 
   return (
 
@@ -17,7 +17,7 @@ export default function Orders() {
           "
         >
 
-          Orders
+          Funnel Analytics
 
         </h1>
 
@@ -28,8 +28,8 @@ export default function Orders() {
           "
         >
 
-          Track and manage
-          commerce orders.
+          Analyze customer
+          conversion funnel.
 
         </p>
 

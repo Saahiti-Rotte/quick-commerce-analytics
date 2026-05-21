@@ -1,7 +1,7 @@
 import Layout
   from "../components/Layout";
 
-export default function Orders() {
+export default function Churn() {
 
   return (
 
@@ -17,7 +17,7 @@ export default function Orders() {
           "
         >
 
-          Orders
+          Churn Analytics
 
         </h1>
 
@@ -28,8 +28,8 @@ export default function Orders() {
           "
         >
 
-          Track and manage
-          commerce orders.
+          Identify churn-risk
+          customers.
 
         </p>
 

@@ -1,214 +1,309 @@
-import { useEffect, useState } from "react"
-
-import api from "../services/api"
-
-import DashboardLayout from "../layouts/DashboardLayout"
-
-import RevenueChart from "../components/RevenueChart"
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
-import {
-  ShoppingCart,
-  IndianRupee,
-  TrendingUp,
-  Users,
-} from "lucide-react"
+import Layout
+  from "../components/Layout";
+
+import api from "../services/api";
 
 export default function Dashboard() {
 
-  const [analytics, setAnalytics] = useState(null)
+  const [analytics, setAnalytics] =
+    useState(null);
 
   useEffect(() => {
-    fetchAnalytics()
-  }, [])
 
-  async function fetchAnalytics() {
+    async function fetchData() {
 
-    try {
+      try {
 
-      const response = await api.get("/analytics")
+        const response =
+          await api.get(
+            "/analytics"
+          );
 
-      setAnalytics(response.data)
+        setAnalytics(
+          response.data
+        );
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error(error)
+        console.error(error);
 
+      }
     }
-  }
+
+    fetchData();
+
+  }, []);
 
   if (!analytics) {
-    return (
-      <DashboardLayout>
 
-        <div className="p-8 text-zinc-400">
+    return (
+
+      <Layout>
+
+        <div className="text-white">
+
           Loading dashboard...
+
         </div>
 
-      </DashboardLayout>
-    )
+      </Layout>
+    );
   }
 
   return (
-    <DashboardLayout>
 
-      <main className="p-8 space-y-8">
+    <Layout>
 
-        {/* Heading */}
+      <div className="space-y-8">
+
+        {/* HEADER */}
+
         <div>
 
-          <h2 className="text-5xl font-bold tracking-tight">
-            Analytics Dashboard
-          </h2>
+          <h1
+            className="
+              text-5xl
+              font-bold
+              text-white
+            "
+          >
 
-          <p className="text-zinc-400 mt-3 text-lg">
-            Real-time commerce intelligence and AI insights.
+            Dashboard
+
+          </h1>
+
+          <p
+            className="
+              text-zinc-400
+              mt-3
+            "
+          >
+
+            Commerce analytics
+            and operational
+            intelligence.
+
           </p>
 
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* KPI CARDS */}
 
-          {/* Orders */}
-          <Card className="bg-zinc-900 border-zinc-800">
+        <div
+          className="
+            grid
+            grid-cols-1
+            md:grid-cols-2
+            xl:grid-cols-3
+            gap-6
+          "
+        >
 
-            <CardHeader className="flex flex-row items-center justify-between">
+          {/* REVENUE */}
 
-              <CardTitle className="text-zinc-300 text-sm">
-                Total Orders
-              </CardTitle>
+          <div
+            className="
+              bg-zinc-900
+              border
+              border-zinc-800
+              rounded-2xl
+              p-6
+            "
+          >
 
-              <ShoppingCart className="h-5 w-5 text-blue-400" />
+            <p
+              className="
+                text-zinc-400
+              "
+            >
 
-            </CardHeader>
+              Total Revenue
 
-            <CardContent>
+            </p>
 
-              <div className="text-4xl font-bold">
-                {analytics.totalOrders}
-              </div>
+            <h2
+              className="
+                text-4xl
+                font-bold
+                mt-3
+              "
+            >
 
-              <p className="text-sm text-green-400 mt-2">
-                +12.4% this month
-              </p>
+              ₹
+              {
+                analytics
+                  .totalRevenue
+              }
 
-            </CardContent>
+            </h2>
 
-          </Card>
+          </div>
 
-          {/* Revenue */}
-          <Card className="bg-zinc-900 border-zinc-800">
+          {/* ORDERS */}
 
-            <CardHeader className="flex flex-row items-center justify-between">
+          <div
+            className="
+              bg-zinc-900
+              border
+              border-zinc-800
+              rounded-2xl
+              p-6
+            "
+          >
 
-              <CardTitle className="text-zinc-300 text-sm">
-                Revenue
-              </CardTitle>
+            <p
+              className="
+                text-zinc-400
+              "
+            >
 
-              <IndianRupee className="h-5 w-5 text-green-400" />
+              Total Orders
 
-            </CardHeader>
+            </p>
 
-            <CardContent>
+            <h2
+              className="
+                text-4xl
+                font-bold
+                mt-3
+              "
+            >
 
-              <div className="text-4xl font-bold">
-                ₹{analytics.totalRevenue}
-              </div>
+              {
+                analytics
+                  .totalOrders
+              }
 
-              <p className="text-sm text-green-400 mt-2">
-                +18.2% growth
-              </p>
+            </h2>
 
-            </CardContent>
+          </div>
 
-          </Card>
+          {/* USERS */}
 
-          {/* Conversion */}
-          <Card className="bg-zinc-900 border-zinc-800">
+          <div
+            className="
+              bg-zinc-900
+              border
+              border-zinc-800
+              rounded-2xl
+              p-6
+            "
+          >
 
-            <CardHeader className="flex flex-row items-center justify-between">
+            <p
+              className="
+                text-zinc-400
+              "
+            >
 
-              <CardTitle className="text-zinc-300 text-sm">
-                Conversion
-              </CardTitle>
+              Active Users
 
-              <TrendingUp className="h-5 w-5 text-purple-400" />
+            </p>
 
-            </CardHeader>
+            <h2
+              className="
+                text-4xl
+                font-bold
+                mt-3
+              "
+            >
 
-            <CardContent>
+              {
+                analytics
+                  .activeUsers
+              }
 
-              <div className="text-4xl font-bold">
-                14.2%
-              </div>
+            </h2>
 
-              <p className="text-sm text-green-400 mt-2">
-                Funnel performance healthy
-              </p>
-
-            </CardContent>
-
-          </Card>
-
-          {/* Users */}
-          <Card className="bg-zinc-900 border-zinc-800">
-
-            <CardHeader className="flex flex-row items-center justify-between">
-
-              <CardTitle className="text-zinc-300 text-sm">
-                Active Users
-              </CardTitle>
-
-              <Users className="h-5 w-5 text-orange-400" />
-
-            </CardHeader>
-
-            <CardContent>
-
-              <div className="text-4xl font-bold">
-                {analytics.activeUsers}
-              </div>
-
-              <p className="text-sm text-green-400 mt-2">
-                +6.8% weekly retention
-              </p>
-
-            </CardContent>
-
-          </Card>
+          </div>
 
         </div>
 
-        {/* Revenue Chart */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        {/* CHART */}
 
-          <CardHeader>
+        <div
+          className="
+            bg-zinc-900
+            border
+            border-zinc-800
+            rounded-2xl
+            p-6
+          "
+        >
 
-            <CardTitle>
+          <div
+            className="
+              flex
+              items-center
+              justify-between
+              mb-6
+            "
+          >
+
+            <h2
+              className="
+                text-2xl
+                font-bold
+              "
+            >
+
               Revenue Trend
-            </CardTitle>
 
-          </CardHeader>
+            </h2>
 
-          <CardContent>
+          </div>
 
-            <RevenueChart
-              data={analytics.revenueTrend}
-            />
+          <div className="h-96">
 
-          </CardContent>
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+            >
 
-        </Card>
+              <LineChart
+                data={
+                  analytics
+                    .revenueTrend
+                }
+              >
 
-      </main>
+                <XAxis dataKey="month" />
 
-    </DashboardLayout>
-  )
+                <YAxis />
+
+                <Tooltip />
+
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#ffffff"
+                  strokeWidth={3}
+                />
+
+              </LineChart>
+
+            </ResponsiveContainer>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </Layout>
+  );
 }

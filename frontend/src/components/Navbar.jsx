@@ -6,7 +6,7 @@ const Navbar = () => {
       </h2>
 
       <div>
-        Divit
+        Saahiti
       </div>
     </div>
   );
